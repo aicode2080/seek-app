@@ -1,6 +1,6 @@
 {
   "name": "create-seek-app",
-  "version": "5.1.0",
+  "version": "1.0.0",
   "keywords": [
     "react"
   ],
@@ -22,9 +22,11 @@
     "createReactApp.js"
   ],
   "bin": {
-    "create-seek-app": "./index.js"
+    "create-seek-app": "./index.js",
+    "react-module": "./lib//index.js"
   },
   "scripts": {
+    "addModule": "node ./lib/index.js --name react-module",
     "test": "cross-env FORCE_COLOR=true jest"
   },
   "dependencies": {
@@ -38,6 +40,7 @@
     "semver": "^7.3.5",
     "tar-pack": "^3.4.1",
     "tmp": "^0.2.1",
+    "inquirer": "^7.3.3",
     "validate-npm-package-name": "^3.0.0"
   },
   "devDependencies": {
