@@ -8,15 +8,11 @@
     4.自动生成aip请求逻辑重复代码 结局每次都要写一堆请求api重复代码问题
     5.自动生成redux  生成action 生成reducer 生成store
 
-
-
-
 使用方式：
 
 npm run addModule
-或者 
-yarn  addModule
-
+或者
+yarn addModule
 
 可扩展，高可用，自动化，解放生产力
 
@@ -27,6 +23,6 @@ yarn  addModule
     3.生成interface 类型
     4.自动生成ssr基础架构
     5.自动生成常用代码片段，只需输入对应关键词
-    6.git自动化
+    6.git自动化 git pull git push git add git commit git init git status git log 等
     7.本地打包集成
     8.您还有哪些是工作中重复的，可以提出来，我会尽快实现

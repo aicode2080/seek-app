@@ -28,10 +28,12 @@
   "scripts": {
     "addModule": "node ./lib/index.js --name react-module",
     "search": "node ./lib/search-code.js",
+    "git": "node ./lib/git-auto.js",
     "test": "cross-env FORCE_COLOR=true jest"
   },
   "dependencies": {
     "chalk": "^3.0.0",
+    "child_process": "^1.0.2",
     "commander": "^4.1.1",
     "cross-spawn": "^7.0.3",
     "envinfo": "^7.8.1",
