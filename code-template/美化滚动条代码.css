@@ -1,0 +1,15 @@
+.scroll-container::-webkit-scrollbar {
+  width: 6px; /* 滚动条的宽度 */
+}
+
+/* 自定义滚动条轨道样式 */
+.scroll-container::-webkit-scrollbar-track {
+  background: transparent; /* 轨道背景颜色 */
+  border-radius: 4px; /* 轨道圆角 */
+}
+
+/* 自定义滚动条滑块样式 */
+.scroll-container::-webkit-scrollbar-thumb {
+  background: #d9d9d9; /* 滑块背景颜色 */
+  border-radius: 4px; /* 滑块圆角 */
+}
