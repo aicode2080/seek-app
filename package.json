@@ -27,6 +27,7 @@
   },
   "scripts": {
     "addModule": "node ./lib/index.js --name react-module",
+    "addRedux": "node ./lib/create-redux.js --name redux-module",
     "search": "node ./lib/search-code.js",
     "git": "node ./lib/git-auto.js",
     "interface": "node ./lib/interface-auto.js",
