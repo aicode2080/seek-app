@@ -23,7 +23,10 @@
   ],
   "bin": {
     "create-seek-app": "./index.js",
-    "react-module": "./lib//index.js"
+    "react-module": "./lib//index.js",
+    "git-a": "./lib/git-auto.js",
+    "async": "./lib/interface-auto.js",
+    "lint": ""
   },
   "scripts": {
     "addModule": "node ./lib/index.js --name react-module",
