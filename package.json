@@ -22,9 +22,9 @@
     "createReactApp.js"
   ],
   "bin": {
-    "create-seek-app": "./index.js",
+    "create-seek-app": "./lib/index.js",
     "react-module": "./lib//index.js",
-    "git-a": "./lib/git-auto.js",
+    "ga": "./lib/git-auto.js",
     "async": "./lib/interface-auto.js",
     "lint": "",
     "seek-app": "./lib/seek-app.js"
