@@ -35,7 +35,8 @@
     "search": "node ./lib/search-code.js",
     "git": "node ./lib/git-auto.js",
     "interface": "node ./lib/interface-auto.js",
-    "test": "cross-env FORCE_COLOR=true jest"
+    "test": "cross-env FORCE_COLOR=true jest",
+    "seek": "node ./lib/seek-app.js"
   },
   "dependencies": {
     "chalk": "^3.0.0",
