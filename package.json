@@ -1,5 +1,5 @@
 {
-  "name": "create-seek-app",
+  "name": "seek-app",
   "version": "1.0.0",
   "keywords": [
     "react"
@@ -26,7 +26,8 @@
     "react-module": "./lib//index.js",
     "git-a": "./lib/git-auto.js",
     "async": "./lib/interface-auto.js",
-    "lint": ""
+    "lint": "",
+    "seek-app": "./lib/seek-app.js"
   },
   "scripts": {
     "addModule": "node ./lib/index.js --name react-module",
