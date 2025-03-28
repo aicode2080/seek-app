@@ -29,3 +29,17 @@ yarn addModule
     9.自动添加页面和路由 yarn addPage -
     10.自动生成react模块文件夹和文件 比如写一个头部组件，每次都要创建ts文件和css文件等 执行命令：yarn addModule
     11.您还有哪些是工作中重复的，可以提出来，我会尽快实现
+
+
+
+
+
+1.0.0
+
+1.安装 npm i seek-app -g 
+2.执行命令 seek-app -v 查看版本
+3.执行命令 seek-app -h 查看帮助
+4.执行命令 seek-app -d 打开debugger模式
+5.执行命令 seek-app -c 关闭debugger模式
+6.执行命令 seek-app -s 生成typescript 类型
+7.执行命令 seek-app -g 自动git常用操作/自动化执行

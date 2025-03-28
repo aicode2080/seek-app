@@ -1,0 +1,9 @@
+# .prettierignore
+build/
+coverage/
+.vscode/
+docker/
+node_modules/
+.temp/
+
+src/
