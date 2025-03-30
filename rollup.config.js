@@ -1,11 +1,14 @@
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import babel from '@rollup/plugin-babel';
-import { terser } from 'rollup-plugin-terser';
-import json from '@rollup/plugin-json';
-import path from 'path';
+const { nodeResolve } = require('@rollup/plugin-node-resolve');
+const commonjs = require('@rollup/plugin-commonjs');
+const { babel } = require('@rollup/plugin-babel');
+const { terser } = require('rollup-plugin-terser');
+const json = require('@rollup/plugin-json');
+const path = require('path');
+const fs = require('fs-extra');
+import copy from 'rollup-plugin-copy';
 
-export default {
+
+module.exports = {
   input: {
     'seek-app': 'src/seek-app.js',
     'git-auto': 'src/git-auto.js',
@@ -13,7 +16,14 @@ export default {
     'search-code': 'src/search-code.js',
     'index': 'src/index.js',
     'create-redux': 'src/create-redux.js',
-    'eslint': 'src/eslint.js'
+    // 'eslint': 'src/eslint.js',
+    "code-review-command": 'src/code-review-command.js',
+    "code-review": 'src/code-review.js',
+    "createReactApp": 'src/createReactApp.js',
+    "install-eslint": 'src/install-eslint.js',
+    "eslint.config": 'src/eslint.config.js',
+    'install-prettier': 'src/install-prettier.js',
+    '.prettierrc': 'src/.prettierrc.js',
   },
   output: {
     dir: 'lib',
@@ -24,17 +34,33 @@ export default {
     banner: '#!/usr/bin/env node'
   },
   plugins: [
+    copy({
+      targets:[
+        { src: 'src/eslint.js', dest: 'lib' },
+        { src: 'src/.prettierignore', dest: 'lib' },
+        { src: 'src/.eslintrc.json', dest: 'lib' },
+      ]
+    }),
     nodeResolve({
       preferBuiltins: true,
-      modulesOnly: true
+      modulesOnly: true,
+      browser: false
     }),
     commonjs({
-      include: 'node_modules/**'
+      include: 'node_modules/**',
+      requireReturnsDefault: 'auto'
     }),
     json(),
     babel({
       babelHelpers: 'inline',
-      exclude: 'node_modules/**'
+      exclude: 'node_modules/**',
+      presets: [
+        ['@babel/preset-env', {
+          targets: {
+            node: '12'
+          }
+        }]
+      ]
     }),
     terser({
       compress: true,
@@ -48,6 +74,8 @@ export default {
     'inquirer',
     'path',
     'child_process',
-    'cross-spawn'
+    'cross-spawn',
+    'process',
+    'url'
   ]
 }; 

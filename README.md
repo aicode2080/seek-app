@@ -30,16 +30,24 @@ yarn addModule
     10.自动生成react模块文件夹和文件 比如写一个头部组件，每次都要创建ts文件和css文件等 执行命令：yarn addModule
     11.您还有哪些是工作中重复的，可以提出来，我会尽快实现
 
-
+扩展： 
+   打包功能
 
 
 
 1.0.0
 
-1.安装 npm i seek-app -g 
-2.执行命令 seek-app -v 查看版本
-3.执行命令 seek-app -h 查看帮助
-4.执行命令 seek-app -d 打开debugger模式
-5.执行命令 seek-app -c 关闭debugger模式
-6.执行命令 seek-app -s 生成typescript 类型
-7.执行命令 seek-app -g 自动git常用操作/自动化执行
+    1.安装 npm i seek-app -g （需要部署本地npm服务）
+    2.执行命令 seek-app -v/v 查看版本
+    3.执行命令 seek-app -h 查看帮助
+    4.执行命令 seek-app d 打开debugger模式
+    5.执行命令 seek-app c 关闭debugger模式
+    6.执行命令 seek-app s 生成typescript 类型
+    7.执行命令 seek-app g 自动git常用操作/自动化执行
+    8.执行命令 seek-app u 自动更新seek-app版本
+    9.执行命令 seek-app r 自动使用ai审核代码，生成html审核结果
+    10.执行命令 seek-app cm 自动创建react组件模版
+    11.seek-app create|n              创建项目模版
+    12.seek-app lint|l     代码检查
+    13.seek-app prettier|p   格式化代码
+    14.seek-app addPage|ap   添加页面和路由(其他更多功能开发中...)
