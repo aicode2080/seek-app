@@ -1,0 +1,21 @@
+# .prettierignore
+build/
+coverage/
+.vscode/
+docker/
+node_modules/
+.temp/
+
+dist
+storybook-static/
+node_modules/
+.husky/
+scripts/
+.eslintignore
+.eslintrc.json
+.gitignore
+.prettierignore
+.prettierrc.js
+eslint.config.js
+package.json
+package-lock.json

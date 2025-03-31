@@ -1,72 +1,43 @@
-const commander = require('commander');
-
-const fs = require('fs');
-const path = require('path');
-const packageJson = require('../package.json');
-const inquirer = require('inquirer');
-
-// 定义模板文件路径
-const templatePath = path.join(__dirname, '../template/react-module/index.tsx');
-const templateCssPath = path.join(__dirname, '../template/react-module/index.module.css');
-
-commander
-  .name('react-module')
-  .version(packageJson.version)
-  .description('自动化创建一个react模块')
-  .option('-n, --name <name>', 'Project name')
-  .option('-p, --path <path>', 'Path to create the project')
-  .action(async () => {
-    // 使用 commander 获取的选项作为默认值（如果提供了的话）
-    const defaultName = commander.opts().name;
-    const defaultPath = commander.opts().path || process.cwd(); // 如果没有指定路径，则使用当前工作目录
-
-    // 使用 inquirer 获取用户输入
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'name',
-        message: 'Enter project name:(默认是"React Module")',
-        default: defaultName, // 提供 commander 提供的默认值作为 inquirer 的默认值
-      },
-      {
-        type: 'input',
-        name: 'path',
-        message: 'Enter the path to create the project:（默认是"./"）',
-        default: defaultPath, // 提供 commander 提供的默认值作为 inquirer 的默认值
-      },
-    ]);
-
-    const projectName = answers.name;
-    const projectPath = path.resolve(answers.path); // 解析路径为绝对路径，确保路径正确性
-    const projectDir = path.join(projectPath, projectName); // 组合路径和项目名以形成完整项目路径
-    createReactModule(projectName, projectDir);
-  });
-
-// 异步函数来创建文件
-async function createReactModule(proName, dir) {
-  try {
-    const targetFileName = 'index.tsx'; // 可以根据需要修改文件名
-    const targetCssFileName = 'index.module.css'; // 可以根据需要修改文件名
-    const targetPath = path.join(dir, targetFileName);
-    const targetCssPath = path.join(dir, targetCssFileName);
-    // 创建项目目录结构（示例）
-    fs.mkdirSync(dir, { recursive: true }); // 创建目录，包括父目录（如果需要的话）
-    // 读取模板文件内容
-    const templateContent = await fs.readFileSync(templatePath, 'utf8');
-    const templateCssContent = await fs.readFileSync(templateCssPath, 'utf8');
-
-    // 根据需要修改模板内容
-    // 例如，替换默认的模块名称或其他占位符
-    const modifiedContent = templateContent.replace(
-      'React Module',
-      '我是自动化创建文件'
-    );
-    await fs.writeFileSync(targetCssPath, templateCssContent, 'utf8');
-    // 写入新文件
-    await fs.writeFileSync(targetPath, modifiedContent, 'utf8');
-    console.log(`Created ${proName} in ${dir}`);
-  } catch (error) {
-    console.error('Error creating React module:', error);
+// 导出所有模块
+module.exports = {
+  // 核心命令
+  seekApp: require('./seek-app'),
+  
+  // 代码审查相关
+  codeReview: require('./code-review'),
+  codeReviewCommand: require('./code-review-command'),
+  
+  // 项目创建相关
+  createModule: require('./create-module'),
+  createRedux: require('./create-redux'),
+  createReactApp: require('./createReactApp'),
+  
+  // 代码规范相关
+  eslint: require('./eslint'),
+  eslintConfig: require('./eslint.config'),
+  installEslint: require('./install-eslint'),
+  installPrettier: require('./install-prettier'),
+  
+  // Git 相关
+  gitAuto: require('./git-auto'),
+  
+  // 接口相关
+  interfaceAuto: require('./interface-auto'),
+  
+  // 搜索相关
+  searchCode: require('./search-code'),
+  
+  // 插件
+  vitePxtorem: require('./plugins/vite-pxtorem'),
+  
+  // Rollup 配置
+  rollupConfig: {
+    base: require('./rollupConfig/rollup.base'),
+    build: require('./rollupConfig/rollup.build'),
+    dev: require('./rollupConfig/rollup.dev'),
+    config: require('./rollupConfig/config'),
+    externals: require('./rollupConfig/externals'),
+    loaders: require('./rollupConfig/loaders'),
+    plugins: require('./rollupConfig/plugins')
   }
-}
-commander.parse(process.argv); // 解析命令行参数，触发 action 函数执行逻辑。
+}; 

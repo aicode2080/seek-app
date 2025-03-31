@@ -1,81 +1,185 @@
+const path = require('path');
+const fs = require('fs');
+const { babel } = require('@rollup/plugin-babel');
 const { nodeResolve } = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
-const { babel } = require('@rollup/plugin-babel');
-const { terser } = require('rollup-plugin-terser');
 const json = require('@rollup/plugin-json');
-const path = require('path');
-const fs = require('fs-extra');
-import copy from 'rollup-plugin-copy';
+const { terser } = require('rollup-plugin-terser');
+const copy = require('rollup-plugin-copy');
 
+// 获取 src 目录的绝对路径
+const srcDir = path.resolve(__dirname, 'src');
 
-module.exports = {
-  input: {
-    'seek-app': 'src/seek-app.js',
-    'git-auto': 'src/git-auto.js',
-    'interface-auto': 'src/interface-auto.js',
-    'search-code': 'src/search-code.js',
-    'index': 'src/index.js',
-    'create-redux': 'src/create-redux.js',
-    // 'eslint': 'src/eslint.js',
-    "code-review-command": 'src/code-review-command.js',
-    "code-review": 'src/code-review.js',
-    "createReactApp": 'src/createReactApp.js',
-    "install-eslint": 'src/install-eslint.js',
-    "eslint.config": 'src/eslint.config.js',
-    'install-prettier': 'src/install-prettier.js',
-    '.prettierrc': 'src/.prettierrc.js',
+// 删除 lib 目录
+const libDir = path.resolve(__dirname, 'lib');
+if (fs.existsSync(libDir)) {
+  fs.rmSync(libDir, { recursive: true, force: true });
+  console.log('已删除 lib 目录');
+}
+
+// 配置外部依赖（不打包进输出文件）
+const external = [
+  'fs',
+  'path',
+  'child_process',
+  'os',
+  'util',
+  'events',
+  'stream',
+  'commander',
+  'chalk',
+  'fs-extra',
+  'inquirer',
+  'axios',
+  'prettier',
+  'rollup',
+  'semver',
+  'tmp',
+  'tar-pack',
+  'hyperquest',
+  'cross-spawn',
+  'prompts',
+  'eslint',
+  'json-schema-to-typescript',
+  'process',
+  'url',
+  'rollup-plugin-serve',
+  'rollup-plugin-livereload',
+  'rollup-plugin-visualizer',
+  'postcss-px-to-viewport',
+  'picocolors',
+  'source-map-js',
+  'nanoid',
+  /node_modules/,
+];
+
+// 是否是生产环境
+const isProd = process.env.NODE_ENV === 'production';
+
+// 递归查找所有 JS 文件并保持目录结构
+function findJsFiles(dir, baseDir = srcDir, fileList = {}) {
+  try {
+    const files = fs.readdirSync(dir);
+
+    files.forEach((file) => {
+      const filePath = path.join(dir, file);
+      const stats = fs.statSync(filePath);
+
+      if (stats.isDirectory()) {
+        findJsFiles(filePath, baseDir, fileList);
+      } else if (file.endsWith('.js') && !file.match(/\.test\.js$/)) {
+        // 计算相对路径
+        const relativePath = path.relative(baseDir, filePath);
+
+        // 对于所有文件，移除 .js 扩展名
+        const entryName = relativePath.replace(/\.js$/, '');
+        fileList[entryName] = filePath;
+      }
+    });
+
+    return fileList;
+  } catch (error) {
+    console.error(`Error finding JS files: ${error.message}`);
+    return fileList;
+  }
+}
+
+// 查找所有 JS 文件
+const entries = findJsFiles(srcDir);
+console.log(entries);
+
+// 创建插件配置
+const plugins = [
+  {
+    name: 'add-shebang',
+    renderChunk(code, chunk) {
+      if (chunk.fileName === 'seek-app.js') {
+        return '#!/usr/bin/env node\n' + code;
+      }
+      return code;
+    },
   },
-  output: {
-    dir: 'lib',
-    format: 'cjs',
-    entryFileNames: '[name].js',
-    sourcemap: true,
-    exports: 'auto',
-    banner: '#!/usr/bin/env node'
-  },
-  plugins: [
-    copy({
-      targets:[
-        { src: 'src/eslint.js', dest: 'lib' },
-        { src: 'src/.prettierignore', dest: 'lib' },
-        { src: 'src/.eslintrc.json', dest: 'lib' },
-      ]
-    }),
-    nodeResolve({
-      preferBuiltins: true,
-      modulesOnly: true,
-      browser: false
-    }),
-    commonjs({
-      include: 'node_modules/**',
-      requireReturnsDefault: 'auto'
-    }),
-    json(),
-    babel({
-      babelHelpers: 'inline',
-      exclude: 'node_modules/**',
-      presets: [
-        ['@babel/preset-env', {
-          targets: {
-            node: '12'
-          }
-        }]
-      ]
-    }),
+  // {
+  //   name: 'fix-directory-structure',
+  //   generateBundle(options, bundle) {
+  //     Object.keys(bundle).forEach((fileName) => {
+  //       const chunk = bundle[fileName];
+  //       const parts = fileName.split('/');
+
+  //       // 如果是 rollupConfig 下的子目录
+  //       if (parts[0] === 'rollupConfig') {
+  //         if (parts.length > 2) {
+  //           if (fileName === 'rollupConfig/rollupConfig/index.js') {
+  //             // 将 rollupConfig/index.js 移动到根目录
+  //             chunk.fileName = 'index.js';
+  //             bundle['index.js'] = chunk;
+  //             delete bundle[fileName];
+  //           } else {
+  //             // 只保留 rollupConfig 和子目录名
+  //             const newFileName = `rollupConfig/${parts[1]}/index.js`;
+  //             chunk.fileName = newFileName;
+  //             bundle[newFileName] = chunk;
+  //             delete bundle[fileName];
+  //           }
+  //         }
+  //       }
+  //     });
+  //   },
+  // },
+  nodeResolve({
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+    preferBuiltins: true,
+  }),
+  commonjs({
+    include: /node_modules/,
+    requireReturnsDefault: 'auto',
+    transformMixedEsModules: true,
+    ignoreDynamicRequires: true,
+  }),
+  json(),
+  babel({
+    babelHelpers: 'bundled',
+    presets: [
+      ['@babel/preset-env', { targets: { node: '12' } }],
+      '@babel/preset-typescript',
+    ],
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    exclude: 'node_modules/**',
+  }),
+  copy({
+    targets: [
+      { src: 'src/eslint.js', dest: 'lib' },
+      { src: 'src/.prettierignore', dest: 'lib' },
+      { src: 'src/.eslintrc.json', dest: 'lib' },
+    ],
+  }),
+  isProd &&
     terser({
-      compress: true,
-      mangle: true
-    })
-  ],
-  external: [
-    'chalk',
-    'commander',
-    'fs-extra',
-    'inquirer',
-    'path',
-    'child_process',
-    'cross-spawn',
-    'process',
-    'url'
-  ]
-}; 
+      format: {
+        comments: false,
+      },
+      compress: {
+        drop_console: false,
+        drop_debugger: true,
+      },
+    }),
+].filter(Boolean);
+
+// 创建输出配置
+const outputConfig = {
+  dir: 'lib',
+  format: 'cjs',
+  exports: 'auto',
+  sourcemap: !isProd,
+  // preserveModules: true, // 保持模块结构
+  // preserveModulesRoot: 'src', // 从 src 目录开始保持结构
+  entryFileNames: '[name].js',
+};
+
+// 导出配置
+module.exports = {
+  input: entries,
+  output: outputConfig,
+  external,
+  plugins,
+};

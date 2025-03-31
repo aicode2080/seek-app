@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seek App</title>
+  <link rel="icon" href="/favicon.ico">
+  <meta name="description" content="Seek App - A modern web application">
+  <meta name="keywords" content="seek-app, web, application">
+  <meta name="author" content="Seek App Team">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <!-- 预加载关键资源 -->
+  <link rel="preload" href="/js/main.js" as="script">
+  <link rel="preload" href="/css/main.css" as="style">
+  <!-- 样式表 -->
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <div id="app"></div>
+  <!-- 主脚本 -->
+  <script type="module" src="/js/main.js"></script>
+  <!-- 兼容性检查 -->
+  <script>
+    // 检查浏览器是否支持现代 JavaScript 特性
+    if (!('Promise' in window)) {
+      document.body.innerHTML = '您的浏览器版本过低，请升级浏览器以获得更好的体验。';
+    }
+  </script>
+</body>
+</html> 

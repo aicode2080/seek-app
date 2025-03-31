@@ -1,0 +1,10 @@
+node_modules
+dist
+build
+coverage
+.next
+.eslintignore
+eslint.config.js
+.prettierrc.js
+static
+eslint.config.js

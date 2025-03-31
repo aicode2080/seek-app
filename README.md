@@ -1,53 +1,102 @@
-# seek-app
+# Seek-App
 
-脚手架工具箱
+现代化的前端应用开发工具
 
-    1.生成react模版  解决每次都要手动创建的问题
-    2.添加页面和路由
-    3.生成interface 类型
-    4.自动生成aip请求逻辑重复代码 结局每次都要写一堆请求api重复代码问题
-    5.自动生成redux  生成action 生成reducer 生成store
+## 功能特点
 
-使用方式：
+- 基于 Rollup 的构建系统
+- 开发环境支持热重载
+- 生产环境代码优化和压缩
+- 模块化的配置文件结构
+- 简洁直观的API
 
-npm run addModule
+## 安装
+
+```bash
+npm install seek-app --save-dev
+```
+
 或者
-yarn addModule
 
-可扩展，高可用，自动化，解放生产力
+```bash
+yarn add seek-app --dev
+```
 
-未来规划：
+## 使用方法
 
-    1.自动生成redux  生成action 生成reducer 生成store  执行命令：yarn addRedux
-    2.自动生成api请求逻辑重复代码 结局每次都要写一堆请求api重复代码问题
-    3.生成interface 类型 执行命令：yarn interface
-    4.自动生成ssr基础架构
-    5.自动生成常用代码片段，只需输入对应关键词 执行命令：yarn search
-    6.git自动化 git pull git push git add git commit git init git status git log 等 执行命令：yarn git
-    7.本地打包集成 类似 vite webpack cli
-    8.脚手架工具，自动生成公司模版项目，解决每次拷贝的问题。只需一个命令即可 yarn create react-seek-template -
-    9.自动添加页面和路由 yarn addPage -
-    10.自动生成react模块文件夹和文件 比如写一个头部组件，每次都要创建ts文件和css文件等 执行命令：yarn addModule
-    11.您还有哪些是工作中重复的，可以提出来，我会尽快实现
+### 开发环境
 
-扩展： 
-   打包功能
+启动开发服务器：
 
+```bash
+npm run dev
+```
 
+这将启动一个开发服务器，支持热重载，并在浏览器中自动打开应用。
 
-1.0.0
+### 构建生产版本
 
-    1.安装 npm i seek-app -g （需要部署本地npm服务）
-    2.执行命令 seek-app -v/v 查看版本
-    3.执行命令 seek-app -h 查看帮助
-    4.执行命令 seek-app d 打开debugger模式
-    5.执行命令 seek-app c 关闭debugger模式
-    6.执行命令 seek-app s 生成typescript 类型
-    7.执行命令 seek-app g 自动git常用操作/自动化执行
-    8.执行命令 seek-app u 自动更新seek-app版本
-    9.执行命令 seek-app r 自动使用ai审核代码，生成html审核结果
-    10.执行命令 seek-app cm 自动创建react组件模版
-    11.seek-app create|n              创建项目模版
-    12.seek-app lint|l     代码检查
-    13.seek-app prettier|p   格式化代码
-    14.seek-app addPage|ap   添加页面和路由(其他更多功能开发中...)
+构建优化后的生产版本：
+
+```bash
+npm run build
+```
+
+生成的文件将在 `dist` 目录中。
+
+### 分析构建
+
+分析构建包的大小：
+
+```bash
+npm run analyze
+```
+
+这将生成一个可视化报告，帮助你分析构建包的大小和依赖关系。
+
+## 配置
+
+### Rollup 配置
+
+Rollup 配置文件位于 `src/rollupConfig` 目录下：
+
+- `rollup.base.js` - 基础配置
+- `rollup.dev.js` - 开发环境配置
+- `rollup.build.js` - 生产环境配置
+
+### 自定义配置
+
+你可以通过修改 `src/rollupConfig/rollup.base.js` 中的 `buildConfig` 对象来自定义构建配置。
+
+## 目录结构
+
+```
+seek-app/
+├── dist/            # 构建输出目录
+├── src/             # 源代码
+│   ├── index.js     # 主入口文件
+│   ├── rollupConfig/# Rollup 配置文件
+│   └── styles/      # 样式文件
+├── public/          # 静态文件
+└── package.json     # 项目配置
+```
+
+## 浏览器兼容性
+
+默认支持的浏览器在 `package.json` 的 `browserslist` 字段中定义：
+
+```json
+"browserslist": [
+  "> 1%",
+  "last 2 versions",
+  "not dead"
+]
+```
+
+## 贡献
+
+欢迎贡献！请阅读 [贡献指南](CONTRIBUTING.md) 了解如何参与项目开发。
+
+## 许可证
+
+[MIT](LICENSE)
