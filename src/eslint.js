@@ -1,4 +1,4 @@
-const { ESLint } = require('eslint');
+import { ESLint } from 'eslint';
 
 // 检查 Node.js 版本是否支持可选链操作符
 function supportsOptionalChaining() {
@@ -64,4 +64,4 @@ async function lintFiles(options = {}) {
   }
 }
 
-module.exports = lintFiles;
+export default lintFiles;

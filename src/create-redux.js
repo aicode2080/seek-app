@@ -1,9 +1,15 @@
-const commander = require('commander');
+import commander from 'commander';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import inquirer from 'inquirer';
 
-const fs = require('fs');
-const path = require('path');
-const packageJson = require('../package.json');
-const inquirer = require('inquirer');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// 读取 package.json
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
 
 // 定义模板文件路径
 const templatePath = path.join(__dirname, '../template/redux-module/slice.ts');

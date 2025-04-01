@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "现代化的前端应用开发工具",
   "main": "dist/index.js",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/aicode2080/seek-app.git",
@@ -20,28 +21,20 @@
     "README.md",
     "LICENSE",
     "template",
-    "code-template"
+    "tsconfig.node.json",
+    "tsconfig.json"
   ],
   "bin": {
-    "seek-app": "./lib/seek-app.js",
-    "create-seek-app": "./lib/createReactApp.js"
+    "seek-app": "./lib/seek-app.js"
   },
   "scripts": {
-    "dev": "rollup -c src/rollupConfig/rollup.dev.js -w",
-    "analyze": "ANALYZE=true rollup -c src/rollupConfig/rollup.build.js",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss}\"",
     "build": "cross-env NODE_ENV=production rollup -c",
     "build:dev": "cross-env NODE_ENV=development rollup -c",
-    "clean": "rimraf lib",
-    "addModule": "node ./lib/index.js --name react-module",
-    "addRedux": "node ./lib/create-redux.js --name redux-module",
-    "search": "node ./lib/search-code.js",
-    "git": "node ./lib/git-auto.js",
-    "interface": "node ./lib/interface-auto.js",
-    "seek": "node ./lib/seek-app.js"
+    "clean": "rimraf lib"
   },
   "keywords": [
     "frontend",
@@ -53,13 +46,24 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@rollup/plugin-json": "^4.1.0",
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "@babel/preset-react": "^7.26.3",
+    "@babel/preset-typescript": "^7.27.0",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-image": "^3.0.3",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-replace": "^5.0.5",
+    "@rollup/plugin-typescript": "^12.1.2",
     "axios": "^0.21.1",
     "chalk": "^3.0.0",
     "child_process": "^1.0.2",
     "commander": "^4.1.1",
     "core-js": "^3.30.1",
     "cross-spawn": "^7.0.3",
+    "deepmerge": "^4.3.1",
     "envinfo": "^7.8.1",
     "eslint": "^9.23.0",
     "fs-extra": "^9.1.0",
@@ -69,24 +73,20 @@
     "path": "^0.12.7",
     "prettier": "^2.8.8",
     "prompts": "^2.4.2",
+    "rollup": "^2.33.0",
     "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-serve": "^1.1.0",
     "rollup-plugin-visualizer": "^5.5.0",
     "semver": "^7.3.5",
     "tar-pack": "^3.4.1",
     "tmp": "^0.1.0",
-    "validate-npm-package-name": "^3.0.0"
+    "typescript": "^5.0.0",
+    "validate-npm-package-name": "^3.0.0",
+    "handlebars": "^4.7.8",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-terser": "^7.0.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.0",
-    "@babel/preset-env": "^7.12.0",
-    "@babel/preset-react": "^7.26.3",
-    "@babel/preset-typescript": "^7.27.0",
-    "@rollup/plugin-babel": "^5.3.0",
-    "@rollup/plugin-commonjs": "^16.0.0",
-    "@rollup/plugin-json": "^6.0.0",
-    "@rollup/plugin-node-resolve": "^11.0.0",
-    "@rollup/plugin-replace": "^5.0.2",
     "@vitest/coverage-v8": "^0.34.6",
     "cross-env": "^7.0.3",
     "eslint": "^8.39.0",
@@ -95,18 +95,11 @@
     "postcss-px-to-viewport": "^1.1.1",
     "prettier": "^2.8.8",
     "rimraf": "^3.0.2",
-    "rollup": "^2.33.0",
-    "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-delete": "^2.0.0",
-    "rollup-plugin-livereload": "^2.0.5",
-    "rollup-plugin-serve": "^2.0.2",
-    "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-visualizer": "^5.9.0",
     "vitest": "^0.34.6"
   },
   "browserslist": [
     "> 1%",
-    "last 2 versions",
-    "not dead"
+    "last 2 versions"
   ]
 }

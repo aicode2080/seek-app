@@ -1,17 +1,87 @@
-const path = require('path');
-const { babel } = require('@rollup/plugin-babel');
-const { nodeResolve } = require('@rollup/plugin-node-resolve');
-const commonjs = require('@rollup/plugin-commonjs');
-const json = require('@rollup/plugin-json');
+"use strict";
+import { babel } from '@rollup/plugin-babel';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
+import image from '@rollup/plugin-image';
+import typescript from '@rollup/plugin-typescript';
+import path from 'path';
+import fs from 'fs';
+
+// 查找入口文件
+export function findEntryFile() {
+  const possibleEntries = [
+    'src/index.tsx',
+    'src/index.ts',
+    'src/index.jsx',
+    'src/index.js'
+  ];
+
+  for (const entry of possibleEntries) {
+    if (fs.existsSync(path.resolve(process.cwd(), entry))) {
+      return entry;
+    }
+  }
+
+  throw new Error('未找到入口文件，请确保项目中存在以下文件之一：src/index.tsx, src/index.ts, src/index.jsx, src/index.js');
+}
+
+// 获取输出目录
+export const outputDir = process.env.OUTPUT_DIR || 'dist';
+
+// 基础插件配置
+export const basePlugins = [
+  nodeResolve({
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    preferBuiltins: true,
+    mainFields: ['module', 'main']
+  }),
+  commonjs({
+    include: /node_modules/,
+    transformMixedEsModules: true,
+    requireReturnsDefault: 'auto'
+  }),
+  typescript({
+    tsconfig: './tsconfig.json',
+    sourceMap: true,
+    inlineSources: true
+  }),
+  babel({
+    babelHelpers: 'bundled',
+    presets: [
+      ['@babel/preset-env', { 
+        targets: { node: 'current' },
+        modules: 'auto'
+      }],
+      '@babel/preset-react',
+      '@babel/preset-typescript'
+    ],
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    exclude: 'node_modules/**',
+    skipPreflightCheck: true
+  }),
+  json(),
+  image()
+];
+
+// 基础输出配置
+export const baseOutput = {
+  dir: outputDir,
+  format: 'es',
+  sourcemap: true,
+  entryFileNames: 'bundle.js',
+  chunkFileNames: '[name].js',
+  assetFileNames: '[name][extname]'
+};
 
 // 配置构建选项
-const buildConfig = {
+export const buildConfig = {
   // 入口文件，默认为 src/index.js
-  entry: 'src/index.js',
+  entry: findEntryFile(),
   
   // 输出目录
   output: {
-    dir: 'dist',
+    dir: outputDir,
     format: 'umd',
     name: 'app',
     sourcemap: true
@@ -32,28 +102,28 @@ const buildConfig = {
 };
 
 // 解析路径
-const resolvePath = (...args) => path.resolve(process.cwd(), ...args);
+export const resolvePath = (...args) => path.resolve(process.cwd(), ...args);
 
 // 检查文件类型
-const isTypeScript = (file) => /\.(ts|tsx)$/.test(file);
-const isJavaScript = (file) => /\.(js|jsx)$/.test(file);
-const isCSS = (file) => /\.css$/.test(file);
-const isLess = (file) => /\.less$/.test(file);
-const isSass = (file) => /\.(sass|scss)$/.test(file);
-const isJSON = (file) => /\.json$/.test(file);
-const isImage = (file) => /\.(png|jpe?g|gif|svg|webp)$/.test(file);
-const isFont = (file) => /\.(woff2?|eot|ttf|otf)$/.test(file);
-const isMedia = (file) => /\.(mp4|webm|ogg|mp3|wav|flac|aac)$/.test(file);
-const isHTML = (file) => /\.html$/.test(file);
+export const isTypeScript = (file) => /\.(ts|tsx)$/.test(file);
+export const isJavaScript = (file) => /\.(js|jsx)$/.test(file);
+export const isCSS = (file) => /\.css$/.test(file);
+export const isLess = (file) => /\.less$/.test(file);
+export const isSass = (file) => /\.(sass|scss)$/.test(file);
+export const isJSON = (file) => /\.json$/.test(file);
+export const isImage = (file) => /\.(png|jpe?g|gif|svg|webp)$/.test(file);
+export const isFont = (file) => /\.(woff2?|eot|ttf|otf)$/.test(file);
+export const isMedia = (file) => /\.(mp4|webm|ogg|mp3|wav|flac|aac)$/.test(file);
+export const isHTML = (file) => /\.html$/.test(file);
 
 // 获取文件扩展名
-const getFileExt = (file) => {
+export const getFileExt = (file) => {
   const match = file.match(/\.([^.]+)$/);
   return match ? match[1] : '';
 };
 
 // 基础 Rollup 配置
-const baseConfig = {
+export const baseConfig = {
   input: resolvePath(buildConfig.entry),
   output: {
     dir: resolvePath(buildConfig.output.dir),
@@ -61,20 +131,7 @@ const baseConfig = {
     name: buildConfig.output.name,
     sourcemap: buildConfig.output.sourcemap,
   },
-  plugins: [
-    nodeResolve({
-      extensions: buildConfig.extensions
-    }),
-    commonjs(),
-    json(),
-    babel({
-      babelHelpers: 'bundled',
-      presets: [
-        ['@babel/preset-env', { targets: { browsers: '> 1%, not dead' } }]
-      ],
-      extensions: ['.js', '.jsx', '.ts', '.tsx']
-    })
-  ],
+  plugins: basePlugins,
   // 外部依赖
   external: [],
   // 监听选项
@@ -86,19 +143,19 @@ const baseConfig = {
   treeshake: true
 };
 
-module.exports = {
-  baseConfig,
-  buildConfig,
-  resolvePath,
-  isTypeScript,
-  isJavaScript,
-  isCSS,
-  isLess,
-  isSass,
-  isJSON,
-  isImage,
-  isFont,
-  isMedia,
-  isHTML,
-  getFileExt
-}; 
+// module.exports = {
+//   baseConfig,
+//   buildConfig,
+//   resolvePath,
+//   isTypeScript,
+//   isJavaScript,
+//   isCSS,
+//   isLess,
+//   isSass,
+//   isJSON,
+//   isImage,
+//   isFont,
+//   isMedia,
+//   isHTML,
+//   getFileExt
+// }; 

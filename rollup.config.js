@@ -1,11 +1,12 @@
-const path = require('path');
-const fs = require('fs');
-const { babel } = require('@rollup/plugin-babel');
-const { nodeResolve } = require('@rollup/plugin-node-resolve');
-const commonjs = require('@rollup/plugin-commonjs');
-const json = require('@rollup/plugin-json');
-const { terser } = require('rollup-plugin-terser');
-const copy = require('rollup-plugin-copy');
+import path from 'path';
+import fs from 'fs';
+import { babel } from '@rollup/plugin-babel';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
+import { terser } from 'rollup-plugin-terser';
+import copy from 'rollup-plugin-copy';
+
 
 // 获取 src 目录的绝对路径
 const srcDir = path.resolve(__dirname, 'src');
@@ -17,47 +18,11 @@ if (fs.existsSync(libDir)) {
   console.log('已删除 lib 目录');
 }
 
-// 配置外部依赖（不打包进输出文件）
-const external = [
-  'fs',
-  'path',
-  'child_process',
-  'os',
-  'util',
-  'events',
-  'stream',
-  'commander',
-  'chalk',
-  'fs-extra',
-  'inquirer',
-  'axios',
-  'prettier',
-  'rollup',
-  'semver',
-  'tmp',
-  'tar-pack',
-  'hyperquest',
-  'cross-spawn',
-  'prompts',
-  'eslint',
-  'json-schema-to-typescript',
-  'process',
-  'url',
-  'rollup-plugin-serve',
-  'rollup-plugin-livereload',
-  'rollup-plugin-visualizer',
-  'postcss-px-to-viewport',
-  'picocolors',
-  'source-map-js',
-  'nanoid',
-  /node_modules/,
-];
-
 // 是否是生产环境
 const isProd = process.env.NODE_ENV === 'production';
 
 // 递归查找所有 JS 文件并保持目录结构
-function findJsFiles(dir, baseDir = srcDir, fileList = {}) {
+function findJsFiles(dir, baseDir = srcDir, fileList = []) {
   try {
     const files = fs.readdirSync(dir);
 
@@ -67,13 +32,17 @@ function findJsFiles(dir, baseDir = srcDir, fileList = {}) {
 
       if (stats.isDirectory()) {
         findJsFiles(filePath, baseDir, fileList);
-      } else if (file.endsWith('.js') && !file.match(/\.test\.js$/)) {
+      } else if (
+        file.endsWith('.js') && 
+        !file.match(/\.test\.js$/) && 
+        !file.match(/\.config\.js$/)
+      ) {
         // 计算相对路径
         const relativePath = path.relative(baseDir, filePath);
-
-        // 对于所有文件，移除 .js 扩展名
-        const entryName = relativePath.replace(/\.js$/, '');
-        fileList[entryName] = filePath;
+        fileList.push({
+          input: filePath,
+          output: path.join('lib', relativePath)
+        });
       }
     });
 
@@ -86,100 +55,154 @@ function findJsFiles(dir, baseDir = srcDir, fileList = {}) {
 
 // 查找所有 JS 文件
 const entries = findJsFiles(srcDir);
-console.log(entries);
 
-// 创建插件配置
-const plugins = [
-  {
-    name: 'add-shebang',
-    renderChunk(code, chunk) {
-      if (chunk.fileName === 'seek-app.js') {
-        return '#!/usr/bin/env node\n' + code;
-      }
-      return code;
+// 如果没有找到任何文件，添加默认的 seek-app.js
+if (entries.length === 0 && fs.existsSync(path.join(srcDir, 'seek-app.js'))) {
+  entries.push({
+    input: path.join(srcDir, 'seek-app.js'),
+    output: path.join('lib', 'seek-app.js')
+  });
+}
+
+// 确保至少有一个入口文件
+if (entries.length === 0) {
+  console.error('错误: 未找到任何入口文件');
+  process.exit(1);
+}
+
+// 创建基础插件配置
+function createPlugins(fileName) {
+  const isRollupConfig = fileName.includes('rollupConfig');
+  return [
+    {
+      name: 'add-shebang',
+      renderChunk(code, chunk) {
+        if (chunk.fileName === 'seek-app.js') {
+          return '#!/usr/bin/env node\n' + code;
+        }
+        return code;
+      },
     },
-  },
-  // {
-  //   name: 'fix-directory-structure',
-  //   generateBundle(options, bundle) {
-  //     Object.keys(bundle).forEach((fileName) => {
-  //       const chunk = bundle[fileName];
-  //       const parts = fileName.split('/');
-
-  //       // 如果是 rollupConfig 下的子目录
-  //       if (parts[0] === 'rollupConfig') {
-  //         if (parts.length > 2) {
-  //           if (fileName === 'rollupConfig/rollupConfig/index.js') {
-  //             // 将 rollupConfig/index.js 移动到根目录
-  //             chunk.fileName = 'index.js';
-  //             bundle['index.js'] = chunk;
-  //             delete bundle[fileName];
-  //           } else {
-  //             // 只保留 rollupConfig 和子目录名
-  //             const newFileName = `rollupConfig/${parts[1]}/index.js`;
-  //             chunk.fileName = newFileName;
-  //             bundle[newFileName] = chunk;
-  //             delete bundle[fileName];
-  //           }
-  //         }
-  //       }
-  //     });
-  //   },
-  // },
-  nodeResolve({
-    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
-    preferBuiltins: true,
-  }),
-  commonjs({
-    include: /node_modules/,
-    requireReturnsDefault: 'auto',
-    transformMixedEsModules: true,
-    ignoreDynamicRequires: true,
-  }),
-  json(),
-  babel({
-    babelHelpers: 'bundled',
-    presets: [
-      ['@babel/preset-env', { targets: { node: '12' } }],
-      '@babel/preset-typescript',
-    ],
-    extensions: ['.js', '.jsx', '.ts', '.tsx'],
-    exclude: 'node_modules/**',
-  }),
-  copy({
-    targets: [
-      { src: 'src/eslint.js', dest: 'lib' },
-      { src: 'src/.prettierignore', dest: 'lib' },
-      { src: 'src/.eslintrc.json', dest: 'lib' },
-    ],
-  }),
-  isProd &&
-    terser({
-      format: {
-        comments: false,
-      },
-      compress: {
-        drop_console: false,
-        drop_debugger: true,
-      },
+    nodeResolve({
+      extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+      preferBuiltins: false,
+      mainFields: ['module', 'main'],
+      browser: false,
+      resolveOnly: [
+        /@rollup\/plugin-.*/,
+        /rollup-plugin-.*/,
+        /@babel\/.*/,
+        /postcss.*/,
+        /nanoid/,
+        /picocolors/,
+        /source-map-js/,
+        /object-assign/
+      ],
     }),
-].filter(Boolean);
+    commonjs({
+      include: /node_modules/,
+      requireReturnsDefault: 'auto',
+      transformMixedEsModules: true,
+      ignoreDynamicRequires: false,
+      esmExternals: false,
+    }),
+    json(),
+    babel({
+      babelHelpers: 'bundled',
+      presets: [
+        ['@babel/preset-env', { targets: { node: '12' } }],
+        '@babel/preset-typescript',
+      ],
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      exclude: 'node_modules/**',
+    }),
+    // 只对非 rollupConfig 文件使用 terser
+    !isRollupConfig && isProd &&
+      terser({
+        format: {
+          comments: false,
+        },
+        compress: {
+          drop_console: false,
+          drop_debugger: true,
+        },
+      }),
+  ].filter(Boolean);
+}
 
-// 创建输出配置
-const outputConfig = {
-  dir: 'lib',
-  format: 'cjs',
-  exports: 'auto',
-  sourcemap: !isProd,
-  // preserveModules: true, // 保持模块结构
-  // preserveModulesRoot: 'src', // 从 src 目录开始保持结构
-  entryFileNames: '[name].js',
+// 配置外部依赖
+const external = [
+  'fs',
+  'path',
+  'child_process',
+  'os',
+  'util',
+  'events',
+  'stream',
+  'process',
+  'url',
+  /postcss-px-to-viewport/,
+  /postcss/,
+  /source-map/,
+  /nanoid/,
+  /picocolors/,
+  /object-assign/,
+  /@babel\/.*/,
+  /rollup-plugin-visualizer/
+];
+
+// 为每个入口文件创建配置
+const configs = entries.map(({ input, output }) => {
+  const isRollupConfig = input.includes('rollupConfig');
+  return {
+    input,
+    output: {
+      file: output,
+      format: isRollupConfig ? 'cjs' : 'es',
+      exports: 'auto',
+      sourcemap: !isProd,
+    },
+    external: [
+      ...external,
+      // 为 rollupConfig 目录下的文件添加额外的外部依赖
+      ...(isRollupConfig ? [
+        'rollup',
+        '@rollup/plugin-babel',
+        '@rollup/plugin-commonjs',
+        '@rollup/plugin-json',
+        '@rollup/plugin-node-resolve',
+        'rollup-plugin-terser',
+        'rollup-plugin-copy'
+      ] : [])
+    ],
+    plugins: createPlugins(path.basename(output)),
+  };
+});
+
+// 添加复制任务
+const copyConfig = {
+  input: 'src/empty.js',
+  output: {
+    file: 'lib/empty.js',
+    format: 'es',
+    exports: 'auto',
+  },
+  plugins: [
+    copy({
+      targets: [
+        { src: 'src/eslint.js', dest: 'lib' },
+        { src: 'src/.prettierignore', dest: 'lib' },
+        { src: 'src/.eslintrc.json', dest: 'lib' },
+      ],
+    }),
+  ],
 };
+
+// 确保配置数组不为空
+const finalConfig = [...configs];
+if (fs.existsSync('src/empty.js')) {
+  finalConfig.push(copyConfig);
+}
 
 // 导出配置
-module.exports = {
-  input: entries,
-  output: outputConfig,
-  external,
-  plugins,
-};
+export default finalConfig;

@@ -1,7 +1,7 @@
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
-const axios = require('axios');
+import fs from 'fs-extra';
+import path from 'path';
+import chalk from 'chalk';
+import axios from 'axios';
 
 class CodeReviewer {
   constructor(options = {}) {
@@ -330,4 +330,4 @@ ${content}
   }
 }
 
-module.exports = CodeReviewer; 
+export default CodeReviewer; 

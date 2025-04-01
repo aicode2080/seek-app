@@ -1,19 +1,23 @@
 // 根据搜索词 复制对应 code-template 文件夹下面的代码
 
-const inquirer = require('inquirer');
-const fs = require('fs');
-const path = require('path');
+import inquirer from 'inquirer';
+import fs from 'fs';
+import path from 'path';
+import chalk from 'chalk';
+import commander from 'commander';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+// 读取 package.json 中的版本号
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
+const version = packageJson.version;
 
-const chalk = require('chalk'); // 用于在控制台输出彩色文本
-
-const commander = require('commander');
-
-const packageJson = require('../package.json');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const templatePath = path.join(__dirname, '../code-template'); // 模板文件路径
 
 async function createMainFun(params) {
-  commander.version(packageJson.version).action(async () => {
+  commander.version(version).action(async () => {
     await inputFun();
   });
 }

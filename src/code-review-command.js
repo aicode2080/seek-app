@@ -1,7 +1,7 @@
-const chalk = require('chalk');
-const path = require('path');
-const { spawn } = require('child_process');
-const CodeReviewer = require('./code-review');
+import chalk from 'chalk';
+import path from 'path';
+import { spawn } from 'child_process';
+import CodeReviewer from './code-review.js';
 
 async function handleCodeReview(options = {}) {
   console.log(chalk.green('******开始多模型代码审核******'));
@@ -95,4 +95,4 @@ async function handleCodeReview(options = {}) {
   }
 }
 
-module.exports = handleCodeReview; 
+export default handleCodeReview; 

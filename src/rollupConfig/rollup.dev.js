@@ -1,34 +1,35 @@
-const { baseConfig, buildConfig, resolvePath } = require('./rollup.base');
-const serve = require('rollup-plugin-serve');
-const livereload = require('rollup-plugin-livereload');
-const replace = require('@rollup/plugin-replace');
+import serve from 'rollup-plugin-serve';
+import livereload from 'rollup-plugin-livereload';
+import htmlPlugin from './plugins/html-plugin.js';
+import { findEntryFile, basePlugins, baseOutput, outputDir } from './rollup.base.js';
 
 // 开发环境配置
-const devConfig = {
-  ...baseConfig,
+export const devConfig = {
+  input: findEntryFile(),
+  output: {
+    ...baseOutput,
+    inlineDynamicImports: true
+  },
+  external: ['react', 'react-dom'],
+  watch: {
+    include: 'src/**',
+    exclude: 'node_modules/**',
+    clearScreen: false
+  },
   plugins: [
-    ...baseConfig.plugins,
-    
-    // 环境变量替换
-    replace({
-      preventAssignment: true,
-      'process.env.NODE_ENV': JSON.stringify('development')
+    ...basePlugins,
+    htmlPlugin({
+      filename: 'index.html',
+      title: 'Seek App - Development'
     }),
-    
-    // 开发服务器
     serve({
-      contentBase: ['dist', 'public'],
-      port: buildConfig.server.port,
-      host: buildConfig.server.host,
-      open: buildConfig.server.open
+      contentBase: [outputDir],
+      host: 'localhost',
+      port: 3000,
+      open: true
     }),
-    
-    // 热更新
     livereload({
-      watch: 'dist',
-      verbose: false
+      watch: outputDir
     })
   ]
-};
-
-module.exports = devConfig; 
+}; 

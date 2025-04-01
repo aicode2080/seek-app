@@ -1,20 +1,25 @@
-const program = require('commander');
-const chalk = require('chalk');
-const path = require('path');
-const fs = require('fs-extra');
-const { exec, spawn } = require('child_process');
-const prettier = require('prettier');
-const handleCodeReview = require('./code-review-command');
-const lintFiles = require('./eslint');
-const installEslint = require('./install-eslint');
-const installPrettier = require('./install-prettier');
-// import version from '../package.json'; // 获取 package.json 中的版本号 高版本nodejs 导入方式
+import program from 'commander';
+import chalk from 'chalk';
+import path from 'path';
+import fs from 'fs-extra';
+import { exec, spawn } from 'child_process';
+import prettier from 'prettier';
+import handleCodeReview from './code-review-command.js';
+import lintFiles from './eslint.js';
+import installEslint from './install-eslint.js';
+import installPrettier from './install-prettier.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import devConfig from './rollupConfig/index.js'; 
+import prodConfig from './rollupConfig/index.js'; 
 
 // 获取当前文件的目录路径
-const __dirname = path.dirname(require.main.filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// 获取 package.json 中的版本号
-const version = require('../package.json').version;
+// 读取 package.json 中的版本号
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
+const version = packageJson.version;
 
 program
   .version(version, '-v, --version', '显示版本号')
@@ -83,7 +88,7 @@ program
 
     // 显示依赖信息
     console.log(chalk.yellow('\n依赖信息：'));
-    Object.entries(require('../package.json').dependencies).forEach(([dep, version]) => {
+    Object.entries(packageJson.dependencies).forEach(([dep, version]) => {
       console.log(`${dep}: ${version}`);
     });
 
@@ -145,7 +150,7 @@ program
   });
 
 // 执行自动创建组件模块
-  program
+program
   .command('cmodule')
   .alias('cm')
   .description('创建组件模块')
@@ -168,7 +173,6 @@ program
       console.log(chalk.yellow('\n执行结束'));
     });
   });
-
 
 // 执行schema 转换成interface typescript 
 program
@@ -249,39 +253,37 @@ program
     })
   });
 
-
-  // 执行prettier命令
+// 执行prettier命令
 program
-.command('prettier')
-.alias('p')
-.description('格式化代码')
-.option('-d, --dir <dir>', '指定要美化的目录', process.cwd())
-.option('-e, --ext <extensions>', '指定要美化的文件扩展名，用逗号分隔', '.js,.jsx,.ts,.tsx')
-.action(async (options) => {
-  try {
-    const dependencies = ["prettier@^2.0.0"];
-    const cwd = process.cwd();
-    // 使用 npm 安装依赖
-       const installProcess = spawn('npm', ['install', '--save-dev', ...dependencies, '--force'], {
-         cwd,
-         stdio: 'inherit'
-       });
-       installProcess.on('close', async (code) => {
-             if (code === 0) {
-              installPrettier(() => {
-                console.log(chalk.green('✓ 安装prettier 依赖成功'));
-                console.log(chalk.blue('\n现在你可以使用以下命令：'));
-                console.log(chalk.yellow('执行 npm run prettier - 格式化代码'));
-              });
-             } else {
-               console.error(chalk.red('依赖安装失败'));
-             }
-           });
-      
+  .command('prettier')
+  .alias('p')
+  .description('格式化代码')
+  .option('-d, --dir <dir>', '指定要美化的目录', process.cwd())
+  .option('-e, --ext <extensions>', '指定要美化的文件扩展名，用逗号分隔', '.js,.jsx,.ts,.tsx')
+  .action(async (options) => {
+    try {
+      const dependencies = ["prettier@^2.0.0"];
+      const cwd = process.cwd();
+      // 使用 npm 安装依赖
+      const installProcess = spawn('npm', ['install', '--save-dev', ...dependencies, '--force'], {
+        cwd,
+        stdio: 'inherit'
+      });
+      installProcess.on('close', async (code) => {
+        if (code === 0) {
+          installPrettier(() => {
+            console.log(chalk.green('✓ 安装prettier 依赖成功'));
+            console.log(chalk.blue('\n现在你可以使用以下命令：'));
+            console.log(chalk.yellow('执行 npm run prettier - 格式化代码'));
+          });
+        } else {
+          console.error(chalk.red('依赖安装失败'));
+        }
+      });
     } catch (error) {
       console.log(error);
     }
-});
+  });
 
 // 添加代码审核命令
 program
@@ -303,137 +305,48 @@ program
 
 // 添加启动开发服务器命令
 program
-  .command('start')
-  .alias('s')
+  .command('s')
   .description('启动开发服务器')
-  .option('-p, --port <number>', '指定端口号', '3000')
-  .option('-h, --host <string>', '指定主机名', 'localhost')
-  .option('-c, --config <path>', '自定义配置文件路径')
+  .option('-p, --port <port>', '指定端口号', '3000')
+  .option('-h, --host <host>', '指定主机名', 'localhost')
+  .option('-o, --open', '自动打开浏览器')
+  .option('-d, --dir <dir>', '指定输出目录', 'dist')
   .action(async (options) => {
-    console.log(chalk.green('******欢迎使用seek-app脚手架******'));
     try {
       // 设置环境变量
       process.env.NODE_ENV = 'development';
-      process.env.PORT = options.port;
-      process.env.HOST = options.host;
+      process.env.OUTPUT_DIR = options.dir;
 
-      // 检查用户项目是否安装了必要的依赖
-      const userPackageJson = path.resolve(process.cwd(), 'package.json');
-      if (!fs.existsSync(userPackageJson)) {
-        throw new Error('未找到 package.json 文件，请确保在项目根目录下运行此命令');
-      }
-
-      const userDeps = require(userPackageJson).dependencies || {};
-      const requiredDeps = [
-        'rollup',
-        '@rollup/plugin-babel',
-        '@rollup/plugin-node-resolve',
-        '@rollup/plugin-commonjs',
-        '@rollup/plugin-json',
-        'rollup-plugin-terser',
-        'rollup-plugin-serve',
-        'rollup-plugin-livereload'
-      ];
-
-      const missingDeps = requiredDeps.filter(dep => !userDeps[dep]);
-      if (missingDeps.length > 0) {
-        console.log(chalk.yellow('正在安装必要的依赖...'));
-        const npmProcess = spawn('npm', ['install', '--save-dev', ...missingDeps], {
-          stdio: 'inherit',
-          shell: true,
-          cwd: process.cwd()
-        });
-
-        await new Promise((resolve) => {
-          npmProcess.on('close', (code) => {
-            if (code !== 0) {
-              console.error(chalk.red(`依赖安装失败，退出码：${code}`));
-            } else {
-              console.log(chalk.green('✓ 依赖安装成功'));
-            }
-            resolve();
-          });
-        });
-      }
-
-      // 检查用户项目是否有 rollup.config.js
-      const userRollupConfig = path.resolve(process.cwd(), 'rollup.config.js');
-      if (!fs.existsSync(userRollupConfig)) {
-        console.log(chalk.blue('正在创建 rollup.config.js...'));
-        
-        // 复制默认配置文件
-        const defaultConfig = `
-const serve = require('rollup-plugin-serve');
-const livereload = require('rollup-plugin-livereload');
-const { babel } = require('@rollup/plugin-babel');
-const { nodeResolve } = require('@rollup/plugin-node-resolve');
-const commonjs = require('@rollup/plugin-commonjs');
-const json = require('@rollup/plugin-json');
-
-module.exports = {
-  input: 'src/index.js',
-  output: {
-    dir: 'dist',
-    format: 'umd',
-    name: 'app',
-    sourcemap: true
-  },
-  plugins: [
-    nodeResolve(),
-    commonjs(),
-    json(),
-    babel({
-      babelHelpers: 'bundled',
-      presets: [
-        ['@babel/preset-env', { targets: { browsers: '> 1%, not dead' } }]
-      ]
-    }),
-    serve({
-      contentBase: ['dist', 'public'],
-      host: '${options.host}',
-      port: ${options.port},
-      open: true
-    }),
-    livereload('dist')
-  ]
-};
-        `.trim();
-
-        fs.writeFileSync(userRollupConfig, defaultConfig);
-        console.log(chalk.green('✓ 已创建 rollup.config.js'));
-      }
-
-      // 运行 rollup 命令
-      const rollupBin = path.resolve(process.cwd(), 'node_modules/.bin/rollup');
-      const rollupArgs = ['-c', userRollupConfig, '-w'];
+      // 使用 seek-app 自己的 rollup 配置
       
-      console.log(chalk.blue(`执行命令: ${rollupBin} ${rollupArgs.join(' ')}`));
+      const rollup = await import('rollup');
       
-      const rollupProcess = spawn(rollupBin, rollupArgs, {
-        stdio: 'inherit',
-        shell: true,
-        env: {
-          ...process.env,
-          NODE_ENV: 'development',
-          PORT: options.port,
-          HOST: options.host
+      // 启动开发服务器
+      const watcher = await rollup.watch(devConfig);
+
+      console.log(chalk.green('开发服务器已启动'));
+      console.log(chalk.blue(`访问地址: http://${options.host}:${options.port}`));
+      if (options.open) {
+        const open = await import('open');
+        await open.default(`http://${options.host}:${options.port}`);
+      }
+
+      // 监听文件变化
+      watcher.on('event', event => {
+        if (event.code === 'ERROR') {
+          console.error(chalk.red('构建错误:'), event.error);
+        } else if (event.code === 'BUNDLE_END') {
+          console.log(chalk.green('构建完成'));
         }
       });
 
-      rollupProcess.on('error', (error) => {
-        console.error(chalk.red(`执行失败：${error.message}`));
+      // 优雅退出
+      process.on('SIGINT', async () => {
+        await watcher.close();
+        process.exit(0);
       });
-
-      rollupProcess.on('close', (code) => {
-        if (code !== 0) {
-          console.error(chalk.red(`命令执行失败，退出码：${code}`));
-        }
-      });
-      
-      console.log(chalk.green(`开发服务器已启动：http://${options.host}:${options.port}`));
-      
     } catch (error) {
-      console.error(chalk.red(`启动开发服务器失败：${error.message}`));
+      console.error(chalk.red('启动开发服务器失败:'), error);
       process.exit(1);
     }
   });
@@ -451,128 +364,59 @@ program
       // 设置环境变量
       process.env.NODE_ENV = 'production';
       process.env.OUTPUT_DIR = options.output;
-
-      // 确定配置文件路径
-      let configPath;
+      console.log('production','======rollupConfig');
+      // 使用 seek-app 自己的 rollup 配置
       
-      if (options.config) {
-        // 用户指定了配置文件
-        configPath = path.resolve(process.cwd(), options.config);
-      } else {
-        // 查找用户项目中是否存在 rollup.config.js
-        const userConfigPath = path.resolve(process.cwd(), 'rollup.config.js');
-        if (fs.existsSync(userConfigPath)) {
-          configPath = userConfigPath;
-        } else {
-          // 使用 seek-app 内置的配置
-          configPath = path.resolve(__dirname, '../rollupConfig/index.js');
-          
-          // 复制配置文件到用户项目中
-          const seekAppRollupConfigDir = path.resolve(__dirname, 'rollupConfig');
-          const userRollupConfigDir = path.resolve(process.cwd(), 'rollupConfig');
-          
-          if (fs.existsSync(seekAppRollupConfigDir)) {
-            console.log(chalk.blue('正在复制配置文件到您的项目...'));
-            
-            // 如果用户项目中不存在 rollupConfig 目录，则创建
-            if (!fs.existsSync(userRollupConfigDir)) {
-              fs.mkdirpSync(userRollupConfigDir);
-            }
-            
-            // 复制配置文件
-            fs.copySync(seekAppRollupConfigDir, userRollupConfigDir, {
-              overwrite: false, // 不覆盖用户已有的文件
-            });
-            
-            console.log(chalk.green('✓ 配置文件已复制到您的项目中'));
-            
-            // 创建主配置文件
-            const rollupConfigContent = `
-const { rollupConfig } = require('./rollupConfig');
-module.exports = rollupConfig;
-            `.trim();
-            
-            fs.writeFileSync(
-              path.resolve(process.cwd(), 'rollup.config.js'), 
-              rollupConfigContent
-            );
-            
-            console.log(chalk.green('✓ 已创建 rollup.config.js'));
-            configPath = path.resolve(process.cwd(), 'rollup.config.js');
-          }
-        }
-      }
       
-      // 确保配置文件存在
-      if (!fs.existsSync(configPath)) {
-        throw new Error(`找不到配置文件: ${configPath}`);
-      }
       
-      console.log(chalk.blue(`使用配置文件: ${configPath}`));
+      const rollup = await import('rollup');
       
-      // 获取 rollup 命令路径
-      const rollupBin = path.resolve(process.cwd(), 'node_modules/.bin/rollup');
+      // 创建 bundle
+      const bundle = await rollup.rollup(prodConfig);
       
-      // 检查用户项目是否安装了 rollup
-      if (!fs.existsSync(rollupBin)) {
-        console.log(chalk.yellow('正在安装 rollup 和相关依赖...'));
-        
-        // 安装必要的依赖
-        const dependencies = [
-          'rollup',
-          '@rollup/plugin-babel',
-          '@rollup/plugin-node-resolve',
-          '@rollup/plugin-commonjs',
-          '@rollup/plugin-json',
-          'rollup-plugin-terser'
-        ];
-        
-        const npmProcess = spawn('npm', ['install', '--save-dev', ...dependencies], {
-          stdio: 'inherit',
-          shell: true,
-          cwd: process.cwd()
-        });
-        
-        await new Promise((resolve) => {
-          npmProcess.on('close', (code) => {
-            if (code !== 0) {
-              console.error(chalk.red(`依赖安装失败，退出码：${code}`));
-            } else {
-              console.log(chalk.green('✓ 依赖安装成功'));
-            }
-            resolve();
-          });
-        });
-      }
+      // 写入文件
+      await bundle.write(prodConfig.output);
       
-      // 运行 rollup 命令
-      const rollupArgs = ['-c', configPath];
-      console.log(chalk.blue(`执行命令: ${rollupBin} ${rollupArgs.join(' ')}`));
-      
-      const rollupProcess = spawn(rollupBin, rollupArgs, {
-        stdio: 'inherit',
-        shell: true,
-        env: {
-          ...process.env,
-          NODE_ENV: 'production',
-          OUTPUT_DIR: options.output
-        }
-      });
-
-      rollupProcess.on('error', (error) => {
-        console.error(chalk.red(`执行失败：${error.message}`));
-      });
-
-      rollupProcess.on('close', (code) => {
-        if (code !== 0) {
-          console.error(chalk.red(`命令执行失败，退出码：${code}`));
-        } else {
-          console.log(chalk.green(`构建完成，输出目录：${options.output}`));
-        }
-      });
-      
+      console.log(chalk.green(`构建完成，输出目录：${options.output}`));
     } catch (error) {
       console.error(chalk.red(`构建失败：${error.message}`));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('c <project-name>')
+  .description('创建一个新的 Seek App 项目')
+  .action(async (projectName) => {
+    try {
+      console.log(chalk.blue('正在创建项目...'));
+      
+      // 获取模板目录的绝对路径
+      const templateDir = path.resolve(__dirname, '../template');
+      
+      // 确保目标目录不存在
+      const targetDir = path.resolve(process.cwd(), projectName);
+      if (fs.existsSync(targetDir)) {
+        console.error(chalk.red(`错误: 目录 ${projectName} 已存在`));
+        process.exit(1);
+      }
+      
+      // 复制模板文件
+      fs.copySync(templateDir, targetDir);
+      
+      // 进入项目目录
+      process.chdir(targetDir);
+      
+      // 安装依赖
+      console.log(chalk.blue('正在安装依赖...'));
+      exec('npm install', { stdio: 'inherit' });
+      
+      console.log(chalk.green('\n项目创建成功！'));
+      console.log(chalk.blue('\n开始使用:'));
+      console.log(chalk.white(`  cd ${projectName}`));
+      console.log(chalk.white('  npm start'));
+    } catch (error) {
+      console.error(chalk.red('创建项目失败:'), error);
       process.exit(1);
     }
   });

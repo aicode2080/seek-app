@@ -1,6 +1,5 @@
-const { Plugin } = require('rollup');
-const { resolvePath } = require('../rollup.base');
-const { isDev } = require('../config');
+import { resolvePath } from '../rollup.base';
+import { isDev } from '../config';
 
 // 开发环境插件
 const devPlugins = [

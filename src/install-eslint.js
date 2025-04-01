@@ -1,9 +1,15 @@
-const path = require('path');
-const fs = require('fs-extra');
-const chalk = require('chalk');
-const spawn = require('cross-spawn');
-const prettier = require('prettier');
+import path from 'path';
+import fs from 'fs-extra';
+import chalk from 'chalk';
+import spawn from 'cross-spawn';
+import prettier from 'prettier';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { createRequire } from 'module';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const require = createRequire(import.meta.url);
 
 async function initEslint(successCallback) {
   console.log(chalk.green('******配置 ESLint******'));
@@ -122,5 +128,4 @@ eslint.config.js`.trim();
   }
 }
 
-
-module.exports = initEslint;
+export default initEslint;

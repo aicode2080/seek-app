@@ -1,12 +1,16 @@
 import React from 'react';
-
-const a = 1;
-debugger;
-console.log(1);
+import ReactDOM from 'react-dom/client';
 
 const App = () => {
   return <div>Seek App</div>;
-
-  debugger;
 };
-export default App;
+
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
