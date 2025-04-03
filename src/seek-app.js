@@ -10,8 +10,8 @@ import installEslint from './install-eslint.js';
 import installPrettier from './install-prettier.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import devConfig from './rollupConfig/index.js'; 
-import prodConfig from './rollupConfig/index.js'; 
+import { developmentConfig } from './rollupConfig/index.js'; 
+import { productionConfig } from './rollupConfig/index.js'; 
 
 // 获取当前文件的目录路径
 const __filename = fileURLToPath(import.meta.url);
@@ -30,6 +30,16 @@ program
     console.log(chalk.green(`seek-app: ${version}`));
     console.log(chalk.green(`Node.js: ${process.version}`));
     console.log(chalk.green(`npm: ${process.env.npm_version || '未知'}`));
+    process.exit(0);
+  });
+
+  program
+  .command('path')
+  .alias('pt')
+  .description('显示路径信息')
+  .action(() => {
+    console.log(chalk.blue(`安装路径：${__dirname}`));
+    process.exit(0);
   });
 
 // 添加更新选项
@@ -45,7 +55,7 @@ program
     exec('npm view seek-app version', (error, stdout, stderr) => {
       if (error) {
         console.error(chalk.red(`获取最新版本号失败：${error.message}`));
-        return;
+        process.exit(1);
       }
 
       const latestVersion = stdout.trim();
@@ -53,7 +63,7 @@ program
       // 如果最新版本与当前版本相同，提示已是最新
       if (latestVersion === version) {
         console.log(chalk.yellow('当前已是最新版本！'));
-        return;
+        process.exit(0);
       }
 
       // 安装最新版本
@@ -64,6 +74,7 @@ program
         }
 
         console.log(chalk.green(`更新成功！新版本号：${latestVersion}`));
+        process.exit(0);
       });
     });
   });
@@ -275,6 +286,7 @@ program
             console.log(chalk.green('✓ 安装prettier 依赖成功'));
             console.log(chalk.blue('\n现在你可以使用以下命令：'));
             console.log(chalk.yellow('执行 npm run prettier - 格式化代码'));
+            process.exit(1);
           });
         } else {
           console.error(chalk.red('依赖安装失败'));
@@ -303,6 +315,44 @@ program
     });
   });
 
+
+program
+.command('c <project-name>')
+.description('创建一个新的 Seek App 项目')
+.action(async (projectName) => {
+  try {
+    console.log(chalk.blue('正在创建项目...'));
+    
+    // 获取模板目录的绝对路径
+    const templateDir = path.resolve(__dirname, '../template');
+    
+    // 确保目标目录不存在
+    const targetDir = path.resolve(process.cwd(), projectName);
+    if (fs.existsSync(targetDir)) {
+      console.error(chalk.red(`错误: 目录 ${projectName} 已存在`));
+      process.exit(1);
+    }
+    
+    // 复制模板文件
+    fs.copySync(templateDir, targetDir);
+    
+    // 进入项目目录
+    process.chdir(targetDir);
+    
+    // 安装依赖
+    console.log(chalk.blue('正在安装依赖...'));
+    exec('npm install', { stdio: 'inherit' });
+    
+    console.log(chalk.green('\n项目创建成功！'));
+    console.log(chalk.blue('\n开始使用:'));
+    console.log(chalk.white(`  cd ${projectName}`));
+    console.log(chalk.white('  npm start'));
+  } catch (error) {
+    console.error(chalk.red('创建项目失败:'), error);
+    process.exit(1);
+  }
+});
+
 // 添加启动开发服务器命令
 program
   .command('s')
@@ -322,7 +372,7 @@ program
       const rollup = await import('rollup');
       
       // 启动开发服务器
-      const watcher = await rollup.watch(devConfig);
+      const watcher = await rollup.watch(developmentConfig);
 
       console.log(chalk.green('开发服务器已启动'));
       console.log(chalk.blue(`访问地址: http://${options.host}:${options.port}`));
@@ -351,12 +401,12 @@ program
     }
   });
 
-// 添加构建命令
+// // 添加构建命令
 program
   .command('build')
   .alias('b')
   .description('构建生产环境代码')
-  .option('-o, --output <dir>', '指定输出目录', 'dist')
+  .option('-o, --output <dir>', '指定输出目录', 'build')
   .option('-c, --config <path>', '自定义配置文件路径')
   .action(async (options) => {
     console.log(chalk.green('******欢迎使用seek-app脚手架******'));
@@ -372,54 +422,19 @@ program
       const rollup = await import('rollup');
       
       // 创建 bundle
-      const bundle = await rollup.rollup(prodConfig);
+      const bundle = await rollup.rollup(productionConfig);
       
       // 写入文件
-      await bundle.write(prodConfig.output);
+      await bundle.write(productionConfig.output);
       
       console.log(chalk.green(`构建完成，输出目录：${options.output}`));
+      process.exit(1);
     } catch (error) {
       console.error(chalk.red(`构建失败：${error.message}`));
       process.exit(1);
     }
   });
 
-program
-  .command('c <project-name>')
-  .description('创建一个新的 Seek App 项目')
-  .action(async (projectName) => {
-    try {
-      console.log(chalk.blue('正在创建项目...'));
-      
-      // 获取模板目录的绝对路径
-      const templateDir = path.resolve(__dirname, '../template');
-      
-      // 确保目标目录不存在
-      const targetDir = path.resolve(process.cwd(), projectName);
-      if (fs.existsSync(targetDir)) {
-        console.error(chalk.red(`错误: 目录 ${projectName} 已存在`));
-        process.exit(1);
-      }
-      
-      // 复制模板文件
-      fs.copySync(templateDir, targetDir);
-      
-      // 进入项目目录
-      process.chdir(targetDir);
-      
-      // 安装依赖
-      console.log(chalk.blue('正在安装依赖...'));
-      exec('npm install', { stdio: 'inherit' });
-      
-      console.log(chalk.green('\n项目创建成功！'));
-      console.log(chalk.blue('\n开始使用:'));
-      console.log(chalk.white(`  cd ${projectName}`));
-      console.log(chalk.white('  npm start'));
-    } catch (error) {
-      console.error(chalk.red('创建项目失败:'), error);
-      process.exit(1);
-    }
-  });
 
 // 解析命令行参数
 program.parse(process.argv);

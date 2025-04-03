@@ -1,5 +1,6 @@
-module.exports = {
+export default {
   plugins: {
+    'autoprefixer': {},
     'postcss-px-to-viewport': {
       viewportWidth: 375,
       viewportHeight: 667,
@@ -10,4 +11,4 @@ module.exports = {
       mediaQuery: false
     }
   }
-}; 
+};

@@ -7,11 +7,26 @@ import image from '@rollup/plugin-image';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import typescript from '@rollup/plugin-typescript';
+// 添加 less 和 postcss 相关插件
+import postcss from 'rollup-plugin-postcss';
+import autoprefixer from 'autoprefixer';
 import path from 'path';
 import fs from 'fs';
-// import { devConfig } from './rollup.dev.js';
-// import { prodConfig } from './rollup.build.js';
+import htmlPlugin from './plugins/html-plugin';
+import pxToViewport from 'postcss-px-to-viewport';
+// export { devConfig } from './rollup.dev.js';
+// export { prodConfig } from './rollup.build.js';
+const DEVELOP_GLOBAL = (env_global) => `var process = {
+  env: {
+    NODE_ENV: 'development',
+  }
+};`
 
+const PRODUCT_GLOBAL = (env_global) => `var process = {
+  env: {
+    NODE_ENV: 'production',
+  }
+};`
 // CLI 工具构建配置
 export const cliConfig = {
   input: 'src/seek-app.js',
@@ -71,9 +86,24 @@ function findEntryFile() {
 
 // 获取输出目录
 const outputDir = process.env.OUTPUT_DIR || 'dist';
+const prooutputDir = process.env.OUTPUT_DIR || 'build';
+
+// 创建 CSS 处理插件配置
+const cssPluginConfig = {
+  plugins: [
+    postcss({
+      plugins: [autoprefixer()],
+      extract: true, // 将 CSS 提取到单独的文件
+      modules: true, // 启用 CSS 模块
+      use: ['less'], // 使用 less 处理器
+      sourceMap: true,
+      minimize: process.env.NODE_ENV === 'production'
+    })
+  ]
+};
 
 // 开发环境配置
-export const devConfig = {
+export const developmentConfig = {
   input: findEntryFile(),
   output: {
     dir: outputDir,
@@ -82,22 +112,52 @@ export const devConfig = {
     chunkFileNames: '[name].js',
     assetFileNames: '[name][extname]',
     sourcemap: true,
-    inlineDynamicImports: true
+    inlineDynamicImports: true,
+    banner: DEVELOP_GLOBAL('development')
   },
-  external: ['react', 'react-dom'],
   watch: {
     include: 'src/**',
     exclude: 'node_modules/**',
     clearScreen: false
   },
   plugins: [
+    htmlPlugin({
+      filename: 'index.html',
+      title: 'Seek App - Development',
+      links: [
+        { rel: 'stylesheet', href: 'styles.css' }
+      ]
+    }),
+    // 添加 CSS 处理插件
+    postcss({
+      plugins: [
+        autoprefixer(),
+        pxToViewport({
+          viewportWidth: 375,
+          viewportHeight: 667,
+          unitPrecision: 5,
+          viewportUnit: 'vw',
+          selectorBlackList: [],
+          minPixelValue: 1,
+          mediaQuery: false
+        })
+      ],
+      extract: true,
+      modules: true,
+      use: ['less'],
+      sourceMap: true,
+      minimize: true,
+      extract: 'styles.css', // 给 CSS 文件一个固定名称
+    }),
     nodeResolve({
-      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      extensions: ['.js', '.jsx', '.ts', '.tsx', '.less', '.css'],
       preferBuiltins: true
     }),
     commonjs({
       include: /node_modules/,
-      transformMixedEsModules: true
+      transformMixedEsModules: true,
+      // 这个选项很重要，它允许 commonjs 转换 node_modules 中的模块
+      esmExternals: true
     }),
     typescript({
       tsconfig: './tsconfig.json',
@@ -108,7 +168,10 @@ export const devConfig = {
       babelHelpers: 'bundled',
       presets: [
         '@babel/preset-env',
-        '@babel/preset-react',
+        ['@babel/preset-react', {
+          runtime: 'automatic',
+          development: true,
+        }],
         '@babel/preset-typescript'
       ],
       extensions: ['.js', '.jsx', '.ts', '.tsx']
@@ -116,7 +179,7 @@ export const devConfig = {
     json(),
     image(),
     serve({
-      contentBase: [outputDir, 'public'],
+      contentBase: [outputDir],
       host: 'localhost',
       port: 3000,
       open: true
@@ -128,20 +191,49 @@ export const devConfig = {
 };
 
 // 生产环境配置
-export const prodConfig = {
+export const productionConfig = {
   input: findEntryFile(),
   output: {
-    dir: outputDir,
+    dir: prooutputDir,
     format: 'es',
     entryFileNames: '[name].[hash].js',
     chunkFileNames: '[name].[hash].js',
     assetFileNames: '[name].[hash][extname]',
-    sourcemap: true
+    sourcemap: true,
+    banner: PRODUCT_GLOBAL('production')
   },
   external: ['react', 'react-dom'],
   plugins: [
+     // 添加 HTML 插件
+     htmlPlugin({
+      filename: 'index.html',
+      title: 'Seek App - Production',
+      // 添加生产环境特定配置
+      links: [
+        { rel: 'stylesheet', href: 'index.css' } // 确保引入 CSS
+      ]
+    }),
+    postcss({
+      plugins: [
+        autoprefixer(),
+        pxToViewport({
+          viewportWidth: 375,
+          viewportHeight: 667,
+          unitPrecision: 5,
+          viewportUnit: 'vw',
+          selectorBlackList: [],
+          minPixelValue: 1,
+          mediaQuery: false
+        })
+      ],
+      extract: true,
+      modules: true,
+      use: ['less'],
+      sourceMap: true,
+      minimize: true
+    }),
     nodeResolve({
-      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      extensions: ['.js', '.jsx', '.ts', '.tsx', '.less', '.css'],
       preferBuiltins: true
     }),
     commonjs({
@@ -168,4 +260,7 @@ export const prodConfig = {
 };
 
 // 默认导出
-export default process.env.NODE_ENV === 'production' ? prodConfig : devConfig;
+// export default {
+//   prodConfig,
+//   devConfig
+// }

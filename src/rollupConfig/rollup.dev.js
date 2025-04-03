@@ -1,7 +1,7 @@
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
-import htmlPlugin from './plugins/html-plugin.js';
-import { findEntryFile, basePlugins, baseOutput, outputDir } from './rollup.base.js';
+import htmlPlugin from './plugins/html-plugin';
+import { findEntryFile, basePlugins, baseOutput, outputDir } from './rollup.base';
 
 // 开发环境配置
 export const devConfig = {
@@ -23,9 +23,9 @@ export const devConfig = {
       title: 'Seek App - Development'
     }),
     serve({
-      contentBase: [outputDir],
+      contentBase: [outputDir, 'public'],
       host: 'localhost',
-      port: 3000,
+      port: 3001,
       open: true
     }),
     livereload({

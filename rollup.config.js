@@ -156,12 +156,14 @@ const configs = entries.map(({ input, output }) => {
   const isRollupConfig = input.includes('rollupConfig');
   return {
     input,
-    output: {
-      file: output,
-      format: isRollupConfig ? 'cjs' : 'es',
-      exports: 'auto',
-      sourcemap: !isProd,
-    },
+    output: [
+      {
+        file: output,
+        format: isRollupConfig ? 'cjs' : 'es',
+        exports: 'auto',
+        sourcemap: !isProd,
+      }
+    ],
     external: [
       ...external,
       // 为 rollupConfig 目录下的文件添加额外的外部依赖
@@ -193,6 +195,7 @@ const copyConfig = {
         { src: 'src/eslint.js', dest: 'lib' },
         { src: 'src/.prettierignore', dest: 'lib' },
         { src: 'src/.eslintrc.json', dest: 'lib' },
+        { src: 'src/rollupConfig/template.html', dest: 'lib/rollupConfig' },
       ],
     }),
   ],

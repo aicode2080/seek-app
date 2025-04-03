@@ -49,13 +49,10 @@ export const basePlugins = [
   babel({
     babelHelpers: 'bundled',
     presets: [
-      ['@babel/preset-env', { 
-        targets: { node: 'current' },
-        modules: 'auto'
-      }],
-      '@babel/preset-react',
-      '@babel/preset-typescript'
-    ],
+        '@babel/preset-env',
+        '@babel/preset-react',
+        '@babel/preset-typescript'
+      ],
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
     exclude: 'node_modules/**',
     skipPreflightCheck: true

@@ -1,14 +1,14 @@
 "use strict";
-import babel from '@rollup/plugin-babel';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
-import image from '@rollup/plugin-image';
+// import babel from '@rollup/plugin-babel';
+// import { nodeResolve } from '@rollup/plugin-node-resolve';
+// import commonjs from '@rollup/plugin-commonjs';
+// import json from '@rollup/plugin-json';
+// import image from '@rollup/plugin-image';
 import { terser } from 'rollup-plugin-terser';
 import path from 'path';
 import fs from 'fs';
-import { baseConfig, buildConfig, resolvePath } from './rollup.base.js';
-import htmlPlugin from './plugins/html-plugin.js'
+import { baseConfig, } from './rollup.base';
+import htmlPlugin from './plugins/html-plugin'
 import del from 'rollup-plugin-delete';
 import { visualizer } from 'rollup-plugin-visualizer';
 import replace from '@rollup/plugin-replace'
