@@ -1,0 +1,14 @@
+{
+    "routes": [
+        {
+            "path": "/home",
+            "source": "/pages/home/index",
+            "title": "首页"
+        },
+        {
+            "path": "/about",
+            "source": "/pages/about/index",
+            "title": "关于我们"
+        }
+    ]
+}

@@ -8,6 +8,7 @@ import { terser } from 'rollup-plugin-terser';
 import copy from 'rollup-plugin-copy';
 
 
+
 // 获取 src 目录的绝对路径
 const srcDir = path.resolve(__dirname, 'src');
 
@@ -195,6 +196,8 @@ const copyConfig = {
         { src: 'src/eslint.js', dest: 'lib' },
         { src: 'src/.prettierignore', dest: 'lib' },
         { src: 'src/.eslintrc.json', dest: 'lib' },
+        { src: 'src/eslint.config.js', dest: 'lib' },
+        { src: 'src/tailwind.config.js', dest: 'lib' },
         { src: 'src/rollupConfig/template.html', dest: 'lib/rollupConfig' },
       ],
     }),

@@ -10,9 +10,8 @@ import installEslint from './install-eslint.js';
 import installPrettier from './install-prettier.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { developmentConfig } from './rollupConfig/index.js'; 
-import { productionConfig } from './rollupConfig/index.js'; 
-
+import { developmentConfig } from './rollupConfig/index.js';
+import { productionConfig } from './rollupConfig/index.js';
 // 获取当前文件的目录路径
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,11 +28,10 @@ program
     console.log(chalk.blue('版本信息：'));
     console.log(chalk.green(`seek-app: ${version}`));
     console.log(chalk.green(`Node.js: ${process.version}`));
-    console.log(chalk.green(`npm: ${process.env.npm_version || '未知'}`));
     process.exit(0);
   });
 
-  program
+program
   .command('path')
   .alias('pt')
   .description('显示路径信息')
@@ -112,6 +110,7 @@ program
     });
 
     console.log(chalk.blue('\n===== 调试信息结束 ====='));
+    process.exit(0);
   });
 
 // 添加关闭调试模式选项
@@ -132,6 +131,7 @@ program
     // 显示当前状态
     console.log(chalk.yellow('\n调试状态：') + chalk.red('已关闭'));
     console.log(chalk.blue('\n===== 调试模式已关闭 ====='));
+    process.exit(0);
   });
 
 // 执行git自动化命令
@@ -206,32 +206,9 @@ program
         console.error(chalk.red(`命令执行失败，退出码：${code}`));
       }
       console.log(chalk.yellow('\n执行结束'));
+      process.exit(1);
     });
   });
-
-program
-  .command('create')
-  .alias('n')
-  .description('创建项目模版')
-  .action(async (name) => {
-    console.log(chalk.green(`******创建react公司项目模版开发中******`));
-    // const schemaAutoPath = path.join(__dirname, 'interface-auto.js');
-    // const schemaProcess = spawn('node', [schemaAutoPath], {
-    //   stdio: 'inherit',
-    //   shell: true
-    // });
-    // schemaProcess.on('error', (error) => {
-    //   console.error(chalk.red(`执行失败：${error.message}`));
-    // });
-
-    // schemaProcess.on('close', (code) => {
-    //   if (code !== 0) {
-    //     console.error(chalk.red(`命令执行失败，退出码：${code}`));
-    //   }
-    //   console.log(chalk.yellow('\n执行结束'));
-    // });
-  });
-
 // 执行eslint配置命令
 program
   .command('lint')
@@ -250,7 +227,7 @@ program
           extensions,
           fix: options.fix
         });
-        
+
         if (errorCount > 0) {
           console.log(chalk.red(`检查完成，发现 ${errorCount} 个错误`));
           process.exit(1);
@@ -317,41 +294,42 @@ program
 
 
 program
-.command('c <project-name>')
-.description('创建一个新的 Seek App 项目')
-.action(async (projectName) => {
-  try {
-    console.log(chalk.blue('正在创建项目...'));
-    
-    // 获取模板目录的绝对路径
-    const templateDir = path.resolve(__dirname, '../template');
-    
-    // 确保目标目录不存在
-    const targetDir = path.resolve(process.cwd(), projectName);
-    if (fs.existsSync(targetDir)) {
-      console.error(chalk.red(`错误: 目录 ${projectName} 已存在`));
+  .command('create <project-name>')
+  .alias('ct')
+  .description('创建一个新的 Seek App 项目')
+  .action(async (projectName) => {
+    try {
+      console.log(chalk.blue('正在创建项目...'));
+
+      // 获取模板目录的绝对路径
+      const templateDir = path.resolve(__dirname, '../template');
+
+      // 确保目标目录不存在
+      const targetDir = path.resolve(process.cwd(), projectName);
+      if (fs.existsSync(targetDir)) {
+        console.error(chalk.red(`错误: 目录 ${projectName} 已存在`));
+        process.exit(1);
+      }
+
+      // 复制模板文件
+      fs.copySync(templateDir, targetDir);
+
+      // 进入项目目录
+      process.chdir(targetDir);
+
+      // 安装依赖
+      console.log(chalk.blue('正在安装依赖...'));
+      exec('npm install', { stdio: 'inherit' });
+
+      console.log(chalk.green('\n项目创建成功！'));
+      console.log(chalk.blue('\n开始使用:'));
+      console.log(chalk.white(`  cd ${projectName}`));
+      console.log(chalk.white('  npm start'));
+    } catch (error) {
+      console.error(chalk.red('创建项目失败:'), error);
       process.exit(1);
     }
-    
-    // 复制模板文件
-    fs.copySync(templateDir, targetDir);
-    
-    // 进入项目目录
-    process.chdir(targetDir);
-    
-    // 安装依赖
-    console.log(chalk.blue('正在安装依赖...'));
-    exec('npm install', { stdio: 'inherit' });
-    
-    console.log(chalk.green('\n项目创建成功！'));
-    console.log(chalk.blue('\n开始使用:'));
-    console.log(chalk.white(`  cd ${projectName}`));
-    console.log(chalk.white('  npm start'));
-  } catch (error) {
-    console.error(chalk.red('创建项目失败:'), error);
-    process.exit(1);
-  }
-});
+  });
 
 // 添加启动开发服务器命令
 program
@@ -367,10 +345,22 @@ program
       process.env.NODE_ENV = 'development';
       process.env.OUTPUT_DIR = options.dir;
 
+      const outputDir = path.resolve(process.cwd(), options.dir);
+
+      if(fs.existsSync(outputDir)) {
+        fs.rmSync(outputDir, {
+          recursive: true,
+          force: true,
+        });
+      } else {
+        fs.mkdirSync(outputDir, {
+          recursive: true,
+        });
+      }
       // 使用 seek-app 自己的 rollup 配置
-      
+
       const rollup = await import('rollup');
-      
+
       // 启动开发服务器
       const watcher = await rollup.watch(developmentConfig);
 
@@ -414,20 +404,44 @@ program
       // 设置环境变量
       process.env.NODE_ENV = 'production';
       process.env.OUTPUT_DIR = options.output;
-      console.log('production','======rollupConfig');
+      console.log('production', '======rollupConfig');
+      // 清空输出目录
+      const outputDir = path.resolve(process.cwd(), options.output);
+      console.log(`正在清空目录：${outputDir}`);
+      if (fs.existsSync(outputDir)) {
+        fs.rmSync(outputDir, {
+          recursive: true,
+          force: true,
+        });
+      } else {
+        fs.mkdirSync(outputDir, {
+          recursive: true,
+        });
+      }
       // 使用 seek-app 自己的 rollup 配置
-      
-      
-      
+      const startTime = Date.now();
+
       const rollup = await import('rollup');
-      
+
       // 创建 bundle
       const bundle = await rollup.rollup(productionConfig);
-      
+      const { output } = await bundle.write(productionConfig.output);
+
+      let totalSize = 0;
+      output.forEach((chunk) => {
+        const filePath = path.join(options.output, chunk.fileName);
+        const state = fs.statSync(filePath);
+        const size = (state.size / 1024).toFixed(2);
+        totalSize += parseFloat(size);
+        console.log(chalk.green(`文件：${chunk.fileName}，大小：${size} KB`))
+      })
       // 写入文件
-      await bundle.write(productionConfig.output);
-      
+      // await bundle.write(productionConfig.output);
+      const buildTime = (Date.now() - startTime) / 1000;
+
       console.log(chalk.green(`构建完成，输出目录：${options.output}`));
+      console.log(chalk.blue(`构建耗时：${buildTime} 秒`));
+      console.log(chalk.blue(`总大小：${totalSize} KB`));
       process.exit(1);
     } catch (error) {
       console.error(chalk.red(`构建失败：${error.message}`));
