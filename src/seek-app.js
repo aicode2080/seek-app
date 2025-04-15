@@ -10,8 +10,8 @@ import installEslint from './install-eslint.js';
 import installPrettier from './install-prettier.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { developmentConfig } from './rollupConfig/index.js';
-import { productionConfig } from './rollupConfig/index.js';
+// import { developmentConfig } from './rollupConfig/index.js';
+// import { productionConfig } from './rollupConfig/index.js';
 // 获取当前文件的目录路径
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -341,6 +341,8 @@ program
   .option('-d, --dir <dir>', '指定输出目录', 'dist')
   .action(async (options) => {
     try {
+       // 动态导入开发配置
+       const { developmentConfig } = await import('./rollupConfig/index.js');
       // 设置环境变量
       process.env.NODE_ENV = 'development';
       process.env.OUTPUT_DIR = options.dir;
@@ -401,6 +403,8 @@ program
   .action(async (options) => {
     console.log(chalk.green('******欢迎使用seek-app脚手架******'));
     try {
+      // 动态导入生产配置
+      const { productionConfig } = await import('./rollupConfig/index.js');
       // 设置环境变量
       process.env.NODE_ENV = 'production';
       process.env.OUTPUT_DIR = options.output;
