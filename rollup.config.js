@@ -163,6 +163,7 @@ const configs = entries.map(({ input, output }) => {
         format: isRollupConfig ? 'cjs' : 'es',
         exports: 'auto',
         sourcemap: !isProd,
+        inlineDynamicImports: true
       }
     ],
     external: [
